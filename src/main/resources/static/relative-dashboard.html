@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CareCheck - Relative Dashboard</title>
+    <style>
+        body { font-family: Arial; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: #2c3e50; color: white; padding: 20px; border-radius: 10px 10px 0 0; }
+        .dashboard { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 20px; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .ward-list { margin-top: 20px; }
+        .ward-item { padding: 15px; border: 1px solid #ddd; margin: 10px 0; border-radius: 5px; }
+        .status-ok { border-left: 5px solid #2ecc71; }
+        .status-warning { border-left: 5px solid #f39c12; }
+        .status-danger { border-left: 5px solid #e74c3c; }
+        button { padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        pre { background: #2c3e50; color: white; padding: 15px; border-radius: 5px; overflow: auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🧓 CareCheck - Relative Dashboard</h1>
+        <p>Monitor your loved ones' wellbeing</p>
+    </div>
+
+    <div class="dashboard">
+        <div>
+            <div class="card">
+                <h2>Your Wards</h2>
+                <button onclick="loadDashboard(2)">Load Dashboard (Relative ID: 2)</button>
+                <div id="wardList" class="ward-list"></div>
+            </div>
+
+            <div class="card">
+                <h2>Test Controls</h2>
+                <button onclick="setupTestRelationships()">Setup Test Relationships</button>
+                <button onclick="testNotifications()">Test Notifications</button>
+                <button onclick="searchWards()">Search Wards</button>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <h2>API Responses</h2>
+                <pre id="apiResult">Click buttons to see results...</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function callApi(url, method = 'GET', body = null) {
+        const result = document.getElementById('apiResult');
+        result.textContent = `Calling ${url}...`;
+
+        try {
+            const options = {
+                method: method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            const response = await fetch(url, options);
+            const text = await response.text();
+
+            let formatted;
+            try {
+                formatted = JSON.stringify(JSON.parse(text), null, 2);
+            } catch {
+                formatted = text;
+            }
+
+            result.textContent = `URL: ${url}\nStatus: ${response.status}\n\n${formatted}`;
+            return JSON.parse(text);
+        } catch (error) {
+            result.textContent = `Error: ${error.message}`;
+            throw error;
+        }
+    }
+
+    async function loadDashboard(relativeId) {
+        const data = await callApi(`/api/relationships/relative/${relativeId}/dashboard`);
+
+        // Отображаем список подопечных
+        const wardList = document.getElementById('wardList');
+        wardList.innerHTML = '<h3>Monitored Wards:</h3>';
+
+        if (data.wards && data.wards.length > 0) {
+            data.wards.forEach(ward => {
+                const statusClass = `status-${ward.status.toLowerCase()}`;
+                const statusEmoji = {
+                    'OK': '✅',
+                    'WARNING': '⚠️',
+                    'DANGER': '🚨',
+                    'NO_CHECKINS': '❓'
+                }[ward.status] || '❓';
+
+                wardList.innerHTML += `
+                    <div class="ward-item ${statusClass}">
+                        <strong>${statusEmoji} ${ward.name}</strong>
+                        <p>Status: ${ward.status}</p>
+                        <p>Last check: ${ward.lastCheckIn || 'Never'}</p>
+                        <p>Check interval: ${ward.checkIntervalHours} hours</p>
+                        ${ward.address ? `<p>Address: ${ward.address}</p>` : ''}
+                    </div>
+                `;
+            });
+
+            // Показываем статистику
+            wardList.innerHTML += `
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                    <h4>📊 Statistics</h4>
+                    <p>✅ OK: ${data.stats.ok || 0}</p>
+                    <p>⚠️ Warning: ${data.stats.warning || 0}</p>
+                    <p>🚨 Danger: ${data.stats.danger || 0}</p>
+                    <p>Total monitored: ${data.totalWards || 0}</p>
+                </div>
+            `;
+        } else {
+            wardList.innerHTML = '<p>No wards being monitored. Add some wards to get started.</p>';
+        }
+    }
+
+    async function setupTestRelationships() {
+        await callApi('/api/relationships/test-setup');
+        alert('Test relationships setup! Now load dashboard again.');
+    }
+
+    async function testNotifications() {
+        await callApi('/api/notifications/test');
+        alert('Check server console logs for notification output!');
+    }
+
+    async function searchWards() {
+        const query = prompt('Enter search term (name, email, username):', 'anna');
+        if (query) {
+            await callApi(`/api/relationships/search/wards?query=${encodeURIComponent(query)}`);
+        }
+    }
+
+    // Автозагрузка при открытии страницы
+    window.onload = function() {
+        setTimeout(() => loadDashboard(2), 1000);
+    };
+</script>
+</body>
+</html>

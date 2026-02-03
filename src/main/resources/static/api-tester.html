@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareCheck API Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f2f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+
+        h2 {
+            color: #34495e;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .button-group {
+            margin: 10px 0;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        .btn-success {
+            background: #2ecc71;
+        }
+
+        .btn-success:hover {
+            background: #27ae60;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #2c3e50;
+            color: white;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin: 10px 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .endpoint-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .endpoint-card {
+            background: white;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .online {
+            background: #2ecc71;
+        }
+
+        .offline {
+            background: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>CareCheck API Testing Interface</h1>
+
+    <!-- System Status Section -->
+    <div class="section">
+        <h2>System Status</h2>
+        <div class="button-group">
+            <button onclick="testEndpoint('GET', '/api/debug/status')">Check Status</button>
+            <button onclick="testEndpoint('GET', '/api/debug/health')">Health Check</button>
+            <button onclick="testEndpoint('GET', '/api/debug/info')">System Info</button>
+        </div>
+    </div>
+
+    <!-- Test Data Section -->
+    <div class="section">
+        <h2>Test Data</h2>
+        <p>Create test users: grandma_anna (ward) and son_alex (relative)</p>
+        <button class="btn-success" onclick="testEndpoint('GET', '/api/users/test-data')">Create Test Data</button>
+    </div>
+
+    <!-- User Management Section -->
+    <div class="section">
+        <h2>User Management</h2>
+
+        <div class="form-group">
+            <label>Get User by ID:</label>
+            <input type="text" id="userId" placeholder="Enter user ID">
+            <button onclick="getUserById()">Get User</button>
+        </div>
+
+        <div class="form-group">
+            <label>Get User by Username:</label>
+            <input type="text" id="username" placeholder="Enter username">
+            <button onclick="getUserByUsername()">Get User</button>
+        </div>
+
+        <button onclick="testEndpoint('GET', '/api/users/count')">Get User Count</button>
+    </div>
+
+    <!-- Quick Links Section -->
+    <div class="section">
+        <h2>Quick API Endpoints</h2>
+        <div class="endpoint-list">
+            <div class="endpoint-card">
+                <h3>Debug Endpoints</h3>
+                <button onclick="testEndpoint('GET', '/api/debug/status')">/api/debug/status</button>
+                <button onclick="testEndpoint('GET', '/api/debug/health')">/api/debug/health</button>
+                <button onclick="testEndpoint('GET', '/api/debug/info')">/api/debug/info</button>
+            </div>
+
+            <div class="endpoint-card">
+                <h3>User Endpoints</h3>
+                <button onclick="testEndpoint('GET', '/api/users/count')">/api/users/count</button>
+                <button onclick="testEndpoint('GET', '/api/users/test-data')">/api/users/test-data</button>
+            </div>
+
+            <div class="endpoint-card">
+                <h3>Test Registration</h3>
+                <button onclick="testRegistration()">Test User Registration</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="section">
+        <h2>API Response</h2>
+        <div class="result-box">
+            <pre id="result">API responses will appear here...</pre>
+        </div>
+        <div class="button-group">
+            <button class="btn-danger" onclick="clearResults()">Clear Results</button>
+            <button class="btn-success" onclick="runAllTests()">Run All Tests</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let requestCount = 0;
+
+    function testEndpoint(method, url, data = null) {
+        requestCount++;
+        const resultElement = document.getElementById('result');
+        const requestId = requestCount;
+
+        // Show loading
+        resultElement.innerHTML += `\n[${requestId}] Calling ${method} ${url}...\n`;
+
+        const startTime = Date.now();
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: data ? JSON.stringify(data) : null
+        })
+        .then(async response => {
+            const endTime = Date.now();
+            const duration = endTime - startTime;
+
+            let responseText;
+            try {
+                const json = await response.json();
+                responseText = JSON.stringify(json, null, 2);
+            } catch {
+                responseText = await response.text();
+            }
+
+            const statusIcon = response.ok ? '✅' : '❌';
+            resultElement.innerHTML = resultElement.innerHTML.replace(
+                `[${requestId}] Calling ${method} ${url}...`,
+                `[${requestId}] ${statusIcon} ${method} ${url} - Status: ${response.status} (${duration}ms)\n${responseText}\n────────────────────\n`
+            );
+
+            // Scroll to bottom
+            resultElement.scrollTop = resultElement.scrollHeight;
+        })
+        .catch(error => {
+            const endTime = Date.now();
+            const duration = endTime - startTime;
+            resultElement.innerHTML = resultElement.innerHTML.replace(
+                `[${requestId}] Calling ${method} ${url}...`,
+                `[${requestId}] ❌ ${method} ${url} - ERROR (${duration}ms)\n${error.message}\n────────────────────\n`
+            );
+
+            resultElement.scrollTop = resultElement.scrollHeight;
+        });
+    }
+
+    function getUserById() {
+        const userId = document.getElementById('userId').value;
+        if (userId) {
+            testEndpoint('GET', `/api/users/${userId}`);
+        } else {
+            alert('Please enter a user ID');
+        }
+    }
+
+    function getUserByUsername() {
+        const username = document.getElementById('username').value;
+        if (username) {
+            testEndpoint('GET', `/api/users/username/${username}`);
+        } else {
+            alert('Please enter a username');
+        }
+    }
+
+    function testRegistration() {
+        const testUser = {
+            username: 'test_user_' + Date.now(),
+            email: 'test' + Date.now() + '@example.com',
+            password: 'password123',
+            name: 'Test User',
+            phoneNumber: '+375291111111',
+            userType: 'WARD',
+            checkIntervalHours: 24,
+            address: 'Test Address'
+        };
+
+        testEndpoint('POST', '/api/users/register', testUser);
+    }
+
+    function clearResults() {
+        document.getElementById('result').innerHTML = 'Results cleared.\n────────────────────\n';
+    }
+
+    function runAllTests() {
+        clearResults();
+
+        const tests = [
+            { method: 'GET', url: '/api/debug/status' },
+            { method: 'GET', url: '/api/debug/health' },
+            { method: 'GET', url: '/api/debug/info' },
+            { method: 'GET', url: '/api/users/count' },
+            { method: 'GET', url: '/api/users/test-data' }
+        ];
+
+        tests.forEach((test, index) => {
+            setTimeout(() => {
+                testEndpoint(test.method, test.url);
+            }, index * 500);
+        });
+    }
+
+    // Auto-test on load
+    window.onload = function() {
+        setTimeout(() => {
+            testEndpoint('GET', '/api/debug/status');
+        }, 1000);
+    };
+</script>
+</body>
+</html>

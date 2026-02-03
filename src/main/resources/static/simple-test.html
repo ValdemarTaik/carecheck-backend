@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CareCheck API Simple Test</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        button { padding: 10px; margin: 5px; background: blue; color: white; border: none; cursor: pointer; }
+        .result { margin-top: 20px; padding: 15px; background: #f0f0f0; }
+        pre { white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+<h1>CareCheck API Test</h1>
+
+<h2>Test 1: System Status</h2>
+<button onclick="callApi('/api/debug/status')">Test /api/debug/status</button>
+<button onclick="callApi('/api/debug/health')">Test /api/debug/health</button>
+
+<h2>Test 2: Create Test Data</h2>
+<button onclick="callApi('/api/users/test-data')">Create Test Users</button>
+
+<h2>Test 3: Get User Count</h2>
+<button onclick="callApi('/api/users/count')">Count Users</button>
+
+<h2>Test 4: Find User by ID</h2>
+<input type="text" id="userId" placeholder="Enter user ID (1, 2, etc)">
+<button onclick="callApi('/api/users/' + document.getElementById('userId').value)">Find User</button>
+
+<div class="result">
+    <pre id="apiResult">Click buttons to test API...</pre>
+</div>
+
+<script>
+    async function callApi(url) {
+        const resultElement = document.getElementById('apiResult');
+        resultElement.textContent = 'Loading...';
+
+        try {
+            const response = await fetch(url);
+            const text = await response.text();
+
+            let formattedText;
+            try {
+                const json = JSON.parse(text);
+                formattedText = JSON.stringify(json, null, 2);
+            } catch {
+                formattedText = text;
+            }
+
+            resultElement.textContent = `URL: ${url}\nStatus: ${response.status}\n\nResponse:\n${formattedText}`;
+        } catch (error) {
+            resultElement.textContent = `Error: ${error.message}`;
+        }
+    }
+</script>
+</body>
+</html>
